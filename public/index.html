@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="r0mflip">
+
+  <title>Keycloak demo</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
+</head>
+<body>
+
+  <header>
+    <h1>Keycloak demo</h1>
+  </header>
+
+  <main>
+    <div>
+      <p>Actions</p>
+      <button id="me">Account Info</button>
+      <button id="token">Token Info</button>
+      <button id="logout">Logout</button>
+    </div>
+
+    <hr>
+
+    <div>
+      <form action="/api/admin/deleteaccount" method="POST" id="deleteaccount">
+        <p><label for="accId">Delete account</label></p>
+        <input type="text" id="accId" name="accId" placeholder="Account id">
+        <button id="del" type="submit">Delete</button>
+      </form>
+    </div>
+
+    <hr>
+
+    <div>
+      <p>Debug info</p>
+      <pre><code id="code"></code></pre>
+    </div>
+  </main>
+
+  <script src="http://localhost:8080/auth/js/keycloak.js"></script>
+
+  <script>
+    EventTarget.prototype.on = EventTarget.prototype.addEventListener;
+    const $ = q => {const e = document.querySelectorAll(q); return e.length === 1 ? e[0]: [...e];};
+
+    const keycloak = new Keycloak({
+      url: 'http://localhost:8080/auth',
+      realm: 'master',
+      clientId: '666',
+      scope: 'openid'
+    });
+
+    // Initialize keycloak. Login required on page load.
+    keycloak.init({
+      onLoad: 'login-required'
+    }).then(authenticated => {
+      keycloak.loadUserProfile()
+        .then(function(profile) {
+          $('#code').innerHTML = JSON.stringify(profile, null, '  ');
+        }).catch(function() {
+          $('#code').innerHTML = 'Failed to load profile!';
+        });
+    }).catch(_ => {
+      $('#code').innerHTML = 'Failed to initialize keycloak!';
+    });
+
+
+    // Logging out
+    $('#logout').on('click', _ => {keycloak.logout()}, {once: true});
+
+
+    // Profile info
+    $('#me').on('click', async _ => {
+      $('#code').innerHTML = JSON.stringify(await keycloak.loadUserProfile(), null, '  ');
+    });
+
+
+    // Token info
+    $('#token').on('click', _ => {
+      $('#code').innerHTML = JSON.stringify(keycloak.tokenParsed, null, '  ');
+    });
+
+
+    // Delete an account. Can be done only by admin.
+    $('#del').on('click', e => {
+      e.preventDefault();
+      if (!$('#accId').value) {
+        return;
+      }
+
+      fetch('/api/admin/deleteaccount', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${keycloak.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({'accId': $('#accId').value})
+      }).then(async res => {
+        if (res.status === 403) {
+          $('#code').innerHTML = 'Forbidden';
+        } else {
+          $('#code').innerHTML = JSON.stringify(await res.json(), null, '  ');
+        }
+        $('#accId').value = '';
+      });
+    });
+  </script>
+</body>
+</html>
