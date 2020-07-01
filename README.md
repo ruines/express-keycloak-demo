@@ -19,6 +19,9 @@ $ sudo docker run -d -p 8080:8080 -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=ad
 Need `nodejs>=14.0.0`
 
 ```bash
+$ # Install packages
+$ npm i
+$ # Run server
 $ node index.js
 ```
 
