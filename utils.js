@@ -1,7 +1,7 @@
-import {IncomingMessage, OutgoingMessage} from 'http';
+const {IncomingMessage, OutgoingMessage} = require('http');
 
-import jwt from 'jsonwebtoken';
-import getPem from 'rsa-pem-from-mod-exp';
+const jwt = require('jsonwebtoken');
+const getPem = require('rsa-pem-from-mod-exp');
 
 
 const pem = getPem(
@@ -20,7 +20,7 @@ const pem = getPem(
  * @param {OutgoingMessage} res
  * @param {Function} next
  */
-export function verifyToken(req, res, next) {
+function verifyToken(req, res, next) {
   const token = (req.headers.authorization || '').replace(/^Bearer /, '');
 
   // Verify the token using public key of the client.
@@ -41,10 +41,15 @@ export function verifyToken(req, res, next) {
  * @param {OutgoingMessage} res
  * @param {Function} next
  */
-export function protectAdmin(req, res, next) {
+function protectAdmin(req, res, next) {
   if (!req.tokenData.realm_access.roles.includes('admin')) {
     return res.sendStatus(403);
   }
 
   next();
+};
+
+module.exports = {
+  verifyToken,
+  protectAdmin,
 };

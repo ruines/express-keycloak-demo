@@ -1,12 +1,11 @@
-import {createServer} from 'https';
-import {readFileSync} from 'fs';
+const {createServer} = require('http');
 
-import express from 'express';
-import cookieParser from 'cookie-parser';
-import bodyParser from 'body-parser';
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
 
 // Verification utils
-import {verifyToken, protectAdmin} from './utils.js';
+const {verifyToken, protectAdmin} = require('./utils.js');
 
 
 const app = express();
@@ -44,10 +43,7 @@ app.post('/api/admin/deleteaccount', (req, res) => {
 })
 
 
-// HTTPS server
-createServer({
-  key: readFileSync('./domain.key'),
-  cert: readFileSync('./domain.cert'),
-}, app).listen(3000, _ => {
-  console.log('> Listening on https://localhost:3000');
+// HTTP server
+createServer(app).listen(3000, _ => {
+  console.log('> Listening on http://localhost:3000');
 });

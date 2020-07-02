@@ -50,20 +50,21 @@
     const keycloak = new Keycloak({
       url: 'http://localhost:8080/auth',
       realm: 'master',
-      clientId: '666',
-      scope: 'openid'
+      clientId: 'example_client',
     });
 
     // Initialize keycloak. Login required on page load.
     keycloak.init({
-      onLoad: 'login-required'
+      flow: 'implicit',
     }).then(authenticated => {
-      keycloak.loadUserProfile()
-        .then(function(profile) {
-          $('#code').innerHTML = JSON.stringify(profile, null, '  ');
-        }).catch(function() {
-          $('#code').innerHTML = 'Failed to load profile!';
+      if (!authenticated) {
+        return keycloak.login({
+          redirectUri: 'http://localhost:3000/',
+          scope: 'openid',
         });
+      }
+
+      $('#code').innerHTML = 'Ready!';
     }).catch(_ => {
       $('#code').innerHTML = 'Failed to initialize keycloak!';
     });
@@ -75,7 +76,11 @@
 
     // Profile info
     $('#me').on('click', async _ => {
-      $('#code').innerHTML = JSON.stringify(await keycloak.loadUserProfile(), null, '  ');
+      try {
+        $('#code').innerHTML = JSON.stringify(await keycloak.loadUserProfile(), null, '  ');
+      } catch(e) {
+        $('#code').innerHTML = 'Failed to load profile!';
+      }
     });
 
 
